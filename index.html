@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Chat Overlay</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
+    </style>
+    <link rel="stylesheet" href="widget.css">
+    <style id="widget-overrides"></style>
+</head>
+<body>
+
+<main></main>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="fieldData.js"></script>
+<script src="bridge/config.js"></script>
+<script src="bridge/twitch-bridge.js"></script>
+
+<script>
+(async () => {
+    await TWITCH_CONFIG.loadFieldData();
+    const fd = TWITCH_CONFIG.fieldData;
+    document.getElementById('widget-overrides').textContent = `
+        :root {
+            --text-color:     ${fd.text_color     || '#ffffff'};
+            --username-color: ${fd.username_color  || '#ffffff'};
+        }
+        .msg--1 .content__container .text,
+        .msg--alert .msg__container .msg__bottom {
+            font-size: ${fd.fontSize || 22}px;
+        }
+        .msg--1 .content__container .text img,
+        .msg--1 .content__container .text svg {
+            height: calc(22 * 1.4px);
+        }
+        .msg--1 .content__container .text.big img,
+        .msg--1 .content__container .text.big svg {
+            height: calc(${fd.bigEmote || 22} * 2px);
+        }
+    `;
+
+    await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src    = 'widget.js';
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('widget.js konnte nicht geladen werden'));
+        document.body.appendChild(script);
+    });
+
+    const bridge = new TwitchBridge(TWITCH_CONFIG);
+    await bridge.init();
+
+    console.info('[Index] Overlay bereit.');
+})();
+</script>
+
+</body>
+</html>
